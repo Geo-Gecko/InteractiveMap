@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html>
+
+    <head>
+
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="description" content="">
+        <meta name="author" content="">
+        <link rel="shortcut icon" href="data/stork.svg">
+
+        <title>Water Points Arua</title>
+
+        <link href='./js/sidebar/L.css' rel='stylesheet'/>
+        <link rel="stylesheet" href="js/leaflet-0.7.3/leaflet.css" />
+        <link rel="stylesheet" href="js/bootstrap-3.2.0/css/bootstrap.css" />
+        <link rel="stylesheet" href="js/font-awesome-4.1.0/css/font-awesome.css" />
+        <link rel="stylesheet" href="js/leaflet.markercluster/MarkerCluster.Default.css" />
+        <!--        //imports for the filter button-->
+        <link rel="stylesheet" href="assets/css/leaflet.css" />
+        <link rel="stylesheet" href="assets/css/leaflet-easy-button.css" />
+
+        <link rel="stylesheet" href="assets/css/leaflet-tag-filter-button.css" />
+        <link rel="stylesheet" href="assets/js/bootstrap-3.2.0/css/bootstrap.css" />
+        <link rel="stylesheet" href="assets/js/font-awesome-4.1.0/css/font-awesome.css" />
+        <link rel="stylesheet" href="assets/css/MarkerCluster.Default.css" />
+        <link rel="stylesheet" href="assets/css/MarkerCluster.css" />   
+        <link rel="stylesheet" href="assets/css/ripple.min.css" />
+
+
+        <style>
+            body {
+                overflow-y: hidden;
+                padding: 0;
+                margin: 0;
+            }
+
+            html,
+            body,
+            #map {
+                height: 100%;
+                width: 100%;
+            }
+        </style>
+        <script src="js/d3.v3.min.js"></script>
+
+        <script src='./js/jquery.min.js'></script>
+
+
+        <script src="assets/js/leaflet.js"></script>
+        <script type="text/javascript" src="js/leaflet-0.7.3/leaflet.js"></script>
+        <script type="text/javascript" src="js/sidebar/L.js"></script>
+        <script type="text/javascript" src="js/bootstrap-3.2.0/js/bootstrap.js"></script>
+        <script type="text/javascript" src="js/leaflet.markercluster/leaflet.markercluster.js"></script>
+        <script type="text/javascript" src="js/leaflet.easybutton/easy-button.js"></script>
+        <script type="text/javascript" src="js/sidebar/L.Control.Button.js"></script>
+        <script type="text/javascript" src="js/L.Control.Sidebar.js"></script>
+        <script src='./js/Button/easy-button.js'></script>
+        <link href='./js/Button/easy-button.css' rel='stylesheet'/>
+        <link href='./js/Button/icontext.css' rel='stylesheet'/>
+        <link href='./js/L.Control.Sidebar.css' rel='stylesheet'/>
+        <script src="js/RadarChart.js"></script>
+        <script src="js/jquery.min.js"></script>
+
+        <!--        // import the filter buttons-->
+        <script src="assets/js/main.js"></script>
+        <script src="assets/js/leaflet-easy-button.js"></script>
+        <script src="assets/js/leaflet-tag-filter-button.js"></script>
+        <script src="./js/jquery-3.3.1.min.js"></script>	
+        <script type="text/javascript" src="assets/js/bootstrap-3.2.0/js/bootstrap.js"></script>
+        <script src="./js/leaflet.ajax.js"></script>
+        <script type="text/javascript" src="assets/js/leaflet.markercluster/leaflet.markercluster.js"></script>
+        <script type="text/javascript" src="assets/js/sinon.js"></script>
+        <script src="assets/js/leaflet-ajax-gh-pages/dist/leaflet.ajax.js"></script>	
+        <script src="assets/js/jquery-2.1.1.js"></script>
+
+        <!--// styling of filter button-->
+        <style>
+            .leaflet-map {
+                height: 500px;
+                width: 100%;
+            }
+
+            .easy-button-button {
+                display: block !important;
+            }
+
+            .tag-filter-tags-container {
+                left: 30px;
+            }
+        </style>
+
+
+
+
+    </head>
+
+    <body>
+        <div id="map"> </div>
+
+        <div id="sidebar">
+            <h1>Spider Chart </h1>
+            <p><strong>Selected Parish: </strong><span id='parish'></span>
+                <br>
+                <strong>Selected SubCounty: </strong><span id='subCounty'></span></p>
+
+
+
+        </div>
+        <script>       
+
+            $.fn.center = function () {
+                this.css("position","absolute");
+                this.css("bottom", "-5em"
+                        );
+                this.css("right", "0px"
+                        );
+                return this;
+            }
+
+
+
+            var storkmap = {};
+
+            function formatMarkerInfo(node) {
+
+                var link = '<a href="http://www.openstreetmap.org/edit?editor=id&node=' + node.id +
+                    '">Edit this entry in iD</a><br>';
+                //var user = '<b>Added by: </b>' + '<a href="http://www.openstreetmap.org/user/' + node.user + '">' + node.user + '</a><br>';
+                var timestamp = '<b>Timestamp: </b>' + node.timestamp;
+
+                var r = $('<table>');
+
+                for (var i in node.tags)
+                    r.append($('<tr>').append($('<th>').text(i)).append($('<td>').text(node.tags[i])));
+
+                var tags = $('<div>').append(r).html();
+
+
+                var img = '<b>Foto: </b>' + '<a href="' + node.tags.image + '">' + "foto link" + '</a><br>';
+                if (node.tags.image == null) img = '';
+
+
+                return link + '<br>' /*+ user + timestamp + '<br>' + '<br>' */+ '<b>Tags:</b>' + '<br>' + tags + '<br>' +
+                    img;
+            };
+
+            function makeMarkers() {
+                var markerCG = storkmap.markerClusterGroup;
+                var markerCG1 = storkmap.markerClusterGroup1;
+                var markerCG2 = storkmap.markerClusterGroup2;
+                var markerCG3 = storkmap.markerClusterGroup3;
+                var markerCG5 = storkmap.markerClusterGroup5;
+                var markerCG6 = storkmap.markerClusterGroup6;
+                var markerCG11 = storkmap.markerClusterGroup11;
+                markerCG.clearLayers();
+
+                $.getJSON('./data/kampalaParishes.geojson', function(data){
+                    function style(feature) {
+                        return {
+                            color: '#00c5ff',
+                            fillOpacity: 0
+                        };
+                    }
+
+
+
+                    function selectedStyle(feature) {
+                        return {
+                            color: '#ff5500',
+                            fillOpacity: 0,
+                            zIndex:10000
+                        };
+                    }
+                    var selected;
+                    function parishOnEachFeature(feature, featureLayer){
+
+
+                        featureLayer.on({
+                            click: function(e) {
+
+                                selected = [];
+                                selected.push(e.target.feature.properties.pname);
+                                e.target.feature.properties.selected = true;
+                                e.target.setStyle(selectedStyle());
+                                e.target.bringToFront();
+
+                                L.DomEvent.stopPropagation(e); // stop click event from being propagated further
+                            }
+                        });
+                    }
+
+
+                    // function that renders a spider chart on to the slide bar
+                    var datalayer;
+
+                    var rightSidebar = L.control.sidebar('sidebar', {
+                        position: 'right',
+                        closeButton: true
+                    });
+                    storkmap.map.addControl(rightSidebar);
+                    rightSidebar.toggle();
+                    rightSidebar.on('click', function(){
+                        //                        console.log("CLICKED");
+                    });
+
+                    datalayer = L.geoJson(data, {
+                        style: style,
+                        onEachFeature: parishOnEachFeature
+
+                    }).on('click', function () {
+                        if(!rightSidebar.isVisible()) {
+                            rightSidebar.toggle();
+                        }
+
+                        d3.select('#sidebar').select('svg').remove();
+
+                        for (var i = 0; i < data.features.length; i++) {
+                            if(selected[0] === data.features[i].properties.pname) {
+                                document.getElementById('parish').innerHTML = data.features[i].properties.pname;
+                                document.getElementById('subCounty').innerHTML = data.features[i].properties.s;
+
+
+                                var d = [
+                                    [
+                                        {axis:" Male Population ",value:data.features[i].properties.mpopn},
+                                        {axis:" Female Population ",value:data.features[i].properties.fpopn}, 
+                                        {axis:" Sex Ratio ",value:data.features[i].properties.sexratio},
+                                        {axis:" Total Population ",value:data.features[i].properties.tpopn},
+                                        {axis:" Area ",value:data.features[i].properties.Area},
+                                        {axis:" Green Space 2016 ",value:data.features[i].properties.greenSpace_20161206},
+                                        {axis:" Green space 2018 ",value:data.features[i].properties.greenSpace_20180204},
+                                        {axis:" Percentage 2016 ",value:data.features[i].properties.percentage_20161206},
+                                        {axis:" Percentage 2018 ",value:data.features[i].properties.percentage_20180204},
+                                        {axis:" Difference ",value:data.features[i].properties.Difference}
+
+                                    ],[
+
+                                        {axis:"Male Population",value:48.127},
+                                        {axis:"Female Population",value:51.39583333},
+                                        {axis:"Sex Ratio",value:48.26041667},
+                                        {axis:"Total Population",value:48.65625},
+                                        {axis:"Area",value:51.77083333},
+                                        {axis:"Green Space 2016",value:51.44791667},
+                                        {axis:"Green Space 2018",value:48.65625},
+                                        {axis:"Percentage 2016",value:27.83305738},
+                                        {axis:"Percentage 2018",value:9.181135307},
+                                        {axis:"Difference",value:18.65192207}
+                                    ]
+                                ]
+
+
+                                var w = 260,
+                                    h = 260;
+
+
+                                var mycfg = {
+                                    w: w,
+                                    h: h,
+                                    maxValue: 0.6,
+                                    levels: 6,
+                                    ExtraWidthX: 300
+                                }
+
+
+                                RadarChart.draw("#sidebar", d, mycfg);
+
+                                ////////////////////////////////////////////
+                                /////////// Initiate legend ////////////////
+                                ////////////////////////////////////////////
+
+                                var svg = d3.select('#body')
+                                .selectAll('svg')
+                                .append('svg')
+                                .attr("width", w+300)
+                                .attr("height", h)
+
+                                //Create the title for the legend
+                                var text = svg.append("text")
+                                .attr("class", "title")
+                                .attr('transform', 'translate(90,0)') 
+                                .attr("x", w - 70)
+                                .attr("y", 10)
+                                .attr("font-size", "12px")
+                                .attr("fill", "#404040")
+                                .text("What % of owners use a specific service in a week");
+
+                                //Initiate Legend	
+                                var legend = svg.append("g")
+                                .attr("class", "legend")
+                                .attr("height", 100)
+                                .attr("width", 200)
+                                .attr('transform', 'translate(90,20)') 
+                                ;
+                                //Create colour squares
+                                legend.selectAll('rect')
+                                    .data(LegendOptions)
+                                    .enter()
+                                    .append("rect")
+                                    .attr("x", w - 65)
+                                    .attr("y", function(d, i){ return i * 20;})
+                                    .attr("width", 10)
+                                    .attr("height", 10)
+                                    .style("fill", function(d, i){ return colorscale(i);})
+                                ;
+                                //Create text next to squares
+                                legend.selectAll('text')
+                                    .data(LegendOptions)
+                                    .enter()
+                                    .append("text")
+                                    .attr("x", w - 52)
+                                    .attr("y", function(d, i){ return i * 20 + 9;})
+                                    .attr("font-size", "11px")
+                                    .attr("fill", "#737373")
+                                    .text(function(d) { return d; })
+                                ;
+
+
+                            }
+                        }
+                    })
+
+                    storkmap.map.addLayer(datalayer);
+
+                });
+
+                var w = 350,
+                    h = 300;
+
+                var colorscale = d3.scale.category10();
+
+                //Legend titles
+                var LegendOptions = ['Smartphone','Tablet'];
+
+
+                var d = [
+                    [
+                        {axis:"Male Population",value:0.48127},
+                        {axis:"Female Population",value:0.5139583333},
+                        {axis:"Sex Ratio",value:0.4826041667},
+                        {axis:"Total Population",value:0.4865625},
+                        {axis:"Area",value:0.5177083333},
+                        {axis:"Green Space 2016",value:0.5144791667},
+                        {axis:"Green Space 2018",value:0.4865625},
+                        {axis:"Percentage 2016",value:0.2783305738},
+                        {axis:"Percentage 2018",value:0.09181135307},
+                        {axis:"Difference",value:0.1865192207}
+
+                    ],[
+                        {axis:"Male Population",value:0.48127},
+                        {axis:"Female Population",value:0.5139583333},
+                        {axis:"Sex Ratio",value:0.4826041667},
+                        {axis:"Total Population",value:0.4865625},
+                        {axis:"Area",value:0.5177083333},
+                        {axis:"Green Space 2016",value:0.5144791667},
+                        {axis:"Green Space 2018",value:0.4865625},
+                        {axis:"Percentage 2016",value:0.2783305738},
+                        {axis:"Percentage 2018",value:0.09181135307},
+                        {axis:"Difference",value:0.1865192207}
+
+                    ]
+                ];
+
+
+                var mycfg = {
+                    w: w,
+                    h: h,
+                    maxValue: 0.6,
+                    levels: 6,
+                    ExtraWidthX: 300
+                }
+
+                //Call function to draw the Radar chart
+                //Will expect that data is in %'s
+                RadarChart.draw("#sidebar", d, mycfg);
+
+                ////////////////////////////////////////////
+                /////////// Initiate legend ////////////////
+                ////////////////////////////////////////////
+
+                var svg = d3.select('#body')
+                .selectAll('svg')
+                .append('svg')
+                .attr("width", w+300)
+                .attr("height", h)
+
+                //Create the title for the legend
+                var text = svg.append("text")
+                .attr("class", "title")
+                .attr('transform', 'translate(90,0)') 
+                .attr("x", w - 70)
+                .attr("y", 10)
+                .attr("font-size", "12px")
+                .attr("fill", "#404040")
+                .text("What % of owners use a specific service in a week");
+
+                //Initiate Legend	
+                var legend = svg.append("g")
+                .attr("class", "legend")
+                .attr("height", 100)
+                .attr("width", 200)
+                .attr('transform', 'translate(90,20)') 
+                ;
+                //Create colour squares
+                legend.selectAll('rect')
+                    .data(LegendOptions)
+                    .enter()
+                    .append("rect")
+                    .attr("x", w - 65)
+                    .attr("y", function(d, i){ return i * 20;})
+                    .attr("width", 10)
+                    .attr("height", 10)
+                    .style("fill", function(d, i){ return colorscale(i);})
+                ;
+                //Create text next to squares
+                legend.selectAll('text')
+                    .data(LegendOptions)
+                    .enter()
+                    .append("text")
+                    .attr("x", w - 52)
+                    .attr("y", function(d, i){ return i * 20 + 9;})
+                    .attr("font-size", "11px")
+                    .attr("fill", "#737373")
+                    .text(function(d) { return d; })
+                ;
+
+                storkmap.map.on('click', function () {
+                    sidebar.hide();
+                    datalayer.setStyle(style());
+                });
+
+                $.getJSON('./json/HealthCentres.geojson', function(data){
+                    L.geoJson(data, {
+                        onEachFeature: function(feature, layer) {
+                            markerCG.addLayer(layer);
+                        },
+                        pointToLayer: function (feature, latlng) {
+                            var geojsonMarkerProperties = {
+                                tags: [String(feature.properties.Ownership),String(feature.properties.Grade),String(feature.properties.Govt), String(feature.properties.Grid_Dista)],
+                            }
+                            return L.marker(latlng, geojsonMarkerProperties)
+                        }
+                    });
+                });
+
+                $.getJSON('./json/Schools.geojson', function(data){
+                    L.geoJson(data, {
+                        onEachFeature: function(feature, layer) {
+                            markerCG1.addLayer(layer);
+                        },
+                        pointToLayer: function (feature, latlng) {
+                            var geojsonMarkerProperties = {
+                                tags: [String(feature.properties.Ownership),String(feature.properties.Please_spe),String(feature.properties.Govt), String(feature.properties.Priv), String(feature.properties.Prim)],
+                            }
+                            return L.marker(latlng, geojsonMarkerProperties)
+                        }
+                    });
+                });
+                $.getJSON('./json/Police.geojson', function(data){
+                    L.geoJson(data, {
+                        onEachFeature: function(feature, layer) {
+                            markerCG2.addLayer(layer);
+                        },
+                        pointToLayer: function (feature, latlng) {
+                            var geojsonMarkerProperties = {
+                                tags: [String(feature.properties.Ownership),String(feature.properties.Please_spe),String(feature.properties.Govt), String(feature.properties.Priv), String(feature.properties.Prim)],
+                            }
+                            return L.marker(latlng, geojsonMarkerProperties)
+                        }
+                    });
+                });
+
+
+
+            };
+
+            function queryOverpass() {
+                //var bbString = formatBBox(),
+                //overpassQuery = encodeURIComponent("node" + '[birds_nest=stork]' + bbString + ";out body;"),
+                overpassURL = './json/interpreter.json'
+
+
+                $.ajax({
+                    url: overpassURL,
+                    type: 'GET',
+                    crossDomain: true,
+                    success: function (data) {
+                        //                        console.log(data);
+                        storkmap.osmJson = data.elements;
+                        makeMarkers();						
+                    },
+                });
+            };
+
+            function onMapViewReset(e) {
+                queryOverpass();
+            };
+
+            function onMapMoveEnd(e) {
+                queryOverpass();
+            };
+
+            function makeMap() {
+
+                var map = storkmap.map;
+
+                storkmap.map.addLayer(storkmap.markerClusterGroup);
+
+                queryOverpass();
+
+
+                var buttons = {
+                    Borehole: L.easyButton({
+                        position: 'bottomleft',
+                        states: [{
+                            icon: '<img alt="do this" src="data/plus.svg" height="30" width="15" align="left"/><span id="text" class="btn--text"><font color="black"><b>Health Care</b></font></span>',
+                            stateName: 'remove-markers',
+                            onClick: function(control) {
+                                map.removeLayer(storkmap.markerClusterGroup);
+                                control.state('add-markers');
+                            },
+                            title: 'remove markers'
+                        },
+                                 {
+                                     stateName: 'add-markers',
+                                     icon: '<img alt="do this" src="data/plus.svg" height="30" width="15" align="left" style="opacity:0.2 "/><span id="text" class="btn--text"><font color="black"><b>Health Care</b></font></span>',
+                                     title: 'add random markers',
+                                     onClick: function(control) {
+                                         map.addLayer(storkmap.markerClusterGroup);
+                                         control.state('remove-markers');
+                                     }
+                                 }]
+                    }),
+                    Water_Tap: L.easyButton({
+                        position: 'bottomleft',
+                        states: [{
+                            stateName: 'add-markers',
+                            icon: '<img alt="do this" src="data/school.svg" height="30" width="15" align="left" style="opacity:0.2 "/><span id="text" class="btn--text"><font color="black"><b>Schools</b></font></span>',
+                            title: 'add random markers',
+                            onClick: function(control) {
+                                map.addLayer(storkmap.markerClusterGroup1);
+                                control.state('remove-markers');
+                            }
+                        }, {
+                            icon: '<img alt="do this" src="data/school.svg" height="30" width="15" align="left" /><span id="text" class="btn--text"><font color="black"><b>Schools</b></font></span>',
+                            stateName: 'remove-markers',
+                            onClick: function(control) {
+                                map.removeLayer(storkmap.markerClusterGroup1);
+                                control.state('add-markers');
+                            },
+                            title: 'remove markers'
+                        }]
+                    }),
+                    Water_Tank: L.easyButton({
+                        position: 'bottomleft',
+                        states: [{
+                            stateName: 'add-markers',
+                            icon: '<img alt="do this" src="data/shield.svg" height="30" width="15" align="left" style="opacity:0.2 "/><span id="text" class="btn--text"><font color="black"><b>Police</b></font></span>',
+                            title: 'add random markers',
+                            onClick: function(control) {
+                                map.addLayer(storkmap.markerClusterGroup2);
+                                control.state('remove-markers');
+                            }
+                        }, {
+                            icon: '<img alt="do this" src="data/shield.svg" height="30" width="15" align="left" /><span id="text" class="btn--text"><font color="black"><b>Police</b></font></span>',
+                            stateName: 'remove-markers',
+                            onClick: function(control) {
+                                map.removeLayer(storkmap.markerClusterGroup2);
+                                control.state('add-markers');
+                            },
+                            title: 'remove markers'
+                        }]
+                    })
+                }
+
+                // add the buttons. iterates over the buttons objects
+                for (var key in buttons) {
+                    if (buttons.hasOwnProperty(key)) {
+                        buttons[key].addTo(map);
+                    }
+                }
+                var other = d3.select('other');
+                var otherEnd = other.select(function() {
+                    return this.parentNode;
+                });
+                var imageDiv = otherEnd.append('div')
+                .attr("padding-top", "2px");
+                imageDiv.append('img').attr("src", "data/hot-attribution.png")
+                    .attr("align", "center")
+                    .attr("width", "200px");
+
+                map.setView([0.3193, 32.5953], 12);
+
+
+            };
+
+            var attr_osm = '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+            var attr_nests = 'data via <a href="http://www.overpass-api.de/" target=”_blank”>Overpass API</a>';
+            var attr_dev = 'web map funded by <a href="https://www.giz.de/en/worldwide/310.html" target=”_blank”>GIZ-Uganda</a> and created by <a href="http://geogecko.com" target=”_blank”>GeoGecko</a>';
+
+            var layerOSM = L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+                attribution: [attr_osm, attr_nests, attr_dev].join(', ')
+            });
+
+            storkmap.map = L.map('map', {
+                attributionControl: false,
+                layers: [layerOSM],
+                minZoom: 6
+            });
+
+
+
+
+            L.control.attribution({position: 'bottomleft'}).addTo(storkmap.map);
+            storkmap.currentTag = "water_point";
+
+            storkmap.markerClusterGroup = L.markerClusterGroup({
+                iconCreateFunction: function(cluster) {
+                    var childCount = cluster.getChildCount();
+                    return L.divIcon({className: 'Borehole clusterIcons', html: '<div><span>' + childCount + '</span></div>'});
+                },
+                polygonOptions: {
+                    opacity: 0,
+                    fillOpacity: 0
+                }
+            });
+            L.control.tagFilterButton({
+                data: ['GOVERNMENT', 'NGO','PRIVATE','HC II', 'Hospital','HC III','< 1 km', 'More than 1Km'],
+
+                //data: {ownership:'Private, Government, NGO'}, 
+
+                filterOnEveryClick: true,
+                icon: '<img src="heathcenters.png">',
+            }).addTo(storkmap.map);
+
+            storkmap.markerClusterGroup1 = L.markerClusterGroup({
+                iconCreateFunction: function(cluster) {
+                    var childCount = cluster.getChildCount();
+                    return L.divIcon({className: 'Water_Tap clusterIcons', html: '<div><span>' + childCount + '</span></div>'});
+                },
+                polygonOptions: {
+                    opacity: 0,
+                    fillOpacity: 0
+                }
+            });
+
+            L.control.tagFilterButton({
+                data: ['Private','Non- Government Funded','Pre-Primary Schools','Primary Schools','Tertiary Educational Institutions','Secondary Schools','Non Formal Schools','Post Primary Schools','0','1','0', '1', '0', '1'],
+
+                //data: {ownership:'Private, Government, NGO'}, 
+
+                filterOnEveryClick: true,
+                icon: '<img src="schools.png">',
+            }).addTo(storkmap.map);
+
+
+            storkmap.markerClusterGroup2 = L.markerClusterGroup({
+                iconCreateFunction: function(cluster) {
+                    var childCount = cluster.getChildCount();
+                    return L.divIcon({className: 'Water_Tank clusterIcons', html: '<div><span>' + childCount + '</span></div>'});
+                },
+                polygonOptions: {
+                    opacity: 0,
+                    fillOpacity: 0
+                }
+            });
+
+            L.control.tagFilterButton({
+                data: ['County','160', '188','119','153', '164','0','Subcounty','0','854','1314','346','344','348','347'],
+
+                //data: {ownership:'Private, Government, NGO'}, 
+
+                filterOnEveryClick: true,
+                icon: '<img src="police.png">',
+            }).addTo(storkmap.map);
+
+
+            storkmap.markerClusterGroup3 = L.markerClusterGroup({
+                iconCreateFunction: function(cluster) {
+                    var childCount = cluster.getChildCount();
+                    return L.divIcon({className: 'Protected_Spring clusterIcons', html: '<div><span>' + childCount + '</span></div>'});
+                },
+                polygonOptions: {
+                    opacity: 0,
+                    fillOpacity: 0
+                }
+            });
+            storkmap.markerClusterGroup5 = L.markerClusterGroup({
+                iconCreateFunction: function(cluster) {
+                    var childCount = cluster.getChildCount();
+                    return L.divIcon({className: 'Rain_Water clusterIcons', html: '<div><span>' + childCount + '</span></div>'});
+                },
+                polygonOptions: {
+                    opacity: 0,
+                    fillOpacity: 0
+                }
+            });
+            storkmap.markerClusterGroup6 = L.markerClusterGroup({
+                iconCreateFunction: function(cluster) {
+                    var childCount = cluster.getChildCount();
+                    return L.divIcon({className: 'Well clusterIcons', html: '<div><span>' + childCount + '</span></div>'});
+                },
+                polygonOptions: {
+                    opacity: 0,
+                    fillOpacity: 0
+                }
+            });
+            storkmap.markerClusterGroup11 = L.markerClusterGroup({
+                iconCreateFunction: function(cluster) {
+                    var childCount = cluster.getChildCount();
+                    return L.divIcon({className: 'Other clusterIcons', html: '<div><span>' + childCount + '</span></div>'});
+                },
+                polygonOptions: {
+                    opacity: 0,
+                    fillOpacity: 0
+                }
+            });
+
+            storkmap.osmJson = {};
+            makeMap();
+
+
+        </script>
+        <!--    <script src="filterjs/filterHealth.js"></script>-->
+
+        <script src='./js/sidePanelAndChart.js'></script>
+        <script src='./js/ApplyingStyle.js'></script>
+    </body>
+
+</html>
